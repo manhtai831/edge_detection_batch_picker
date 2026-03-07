@@ -38,7 +38,7 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
     }
 
     override fun prepare() {
-        if (!OpenCVLoader.initDebug()) {
+        if (!OpenCVLoader.initLocal()) {
             Log.i(TAG, "loading opencv error, exit")
             finish()
         }
@@ -195,7 +195,7 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             val inputData: ByteArray? = getBytes(contentResolver.openInputStream(imageUri)!!)
             val mat = Mat(Size(imageWidth, imageHeight), CvType.CV_8U)
             mat.put(0, 0, inputData)
-            val pic = Imgcodecs.imdecode(mat, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED)
+            val pic = Imgcodecs.imdecode(mat, Imgcodecs.IMREAD_UNCHANGED)
             if (rotation > -1) Core.rotate(pic, pic, rotation)
             mat.release()
 
