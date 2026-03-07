@@ -10,36 +10,36 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
     var saveTo: String = ""
     var canUseGallery: Bool = true
     
+    private func keyWindow() -> UIWindow? {
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         if self.isBeingPresented {
             cameraController = ImageScannerController()
             cameraController.imageScannerDelegate = self
+            cameraController.isModalInPresentation = true
+            cameraController.overrideUserInterfaceStyle = .dark
+            cameraController.view.backgroundColor = .black
 
-            if #available(iOS 13.0, *) {
-                cameraController.isModalInPresentation = true
-                cameraController.overrideUserInterfaceStyle = .dark
-                cameraController.view.backgroundColor = .black
-            }
-            
             // Temp fix for https://github.com/WeTransfer/WeScan/issues/320
-            if #available(iOS 15, *) {
-                let appearance = UINavigationBarAppearance()
-                let navigationBar = UINavigationBar()
-                appearance.configureWithOpaqueBackground()
-                appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
-                appearance.backgroundColor = .systemBackground
-                navigationBar.standardAppearance = appearance;
-                UINavigationBar.appearance().scrollEdgeAppearance = appearance
-                
-                let appearanceTB = UITabBarAppearance()
-                appearanceTB.configureWithOpaqueBackground()
-                appearanceTB.backgroundColor = .systemBackground
-                UITabBar.appearance().standardAppearance = appearanceTB
-                UITabBar.appearance().scrollEdgeAppearance = appearanceTB
-            }
-            
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
+            appearance.backgroundColor = .systemBackground
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+
+            let appearanceTB = UITabBarAppearance()
+            appearanceTB.configureWithOpaqueBackground()
+            appearanceTB.backgroundColor = .systemBackground
+            UITabBar.appearance().standardAppearance = appearanceTB
+            UITabBar.appearance().scrollEdgeAppearance = appearanceTB
+
             present(cameraController, animated: true) {
-                if let window = UIApplication.shared.keyWindow {
+                if let window = self.keyWindow() {
                     window.addSubview(self.selectPhotoButton)
                     self.setupConstraints()
                 }
@@ -72,17 +72,15 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
     }
     
     @objc func selectPhoto() {
-        if let window = UIApplication.shared.keyWindow {
+        if let window = keyWindow() {
             window.rootViewController?.dismiss(animated: true, completion: nil)
             self.hideButtons()
-            
+
             let scanPhotoVC = ScanPhotoViewController()
             scanPhotoVC._result = _result
             scanPhotoVC.saveTo = self.saveTo
-            if #available(iOS 13.0, *) {
-                scanPhotoVC.isModalInPresentation = true
-                scanPhotoVC.overrideUserInterfaceStyle = .dark
-            }
+            scanPhotoVC.isModalInPresentation = true
+            scanPhotoVC.overrideUserInterfaceStyle = .dark
             window.rootViewController?.present(scanPhotoVC, animated: true)
         }
     }
@@ -92,23 +90,12 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
     }
     
     private func setupConstraints() {
-        var selectPhotoButtonConstraints = [NSLayoutConstraint]()
-        
-        if #available(iOS 11.0, *) {
-            selectPhotoButtonConstraints = [
-                selectPhotoButton.widthAnchor.constraint(equalToConstant: 44.0),
-                selectPhotoButton.heightAnchor.constraint(equalToConstant: 44.0),
-                selectPhotoButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -24.0),
-                view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: selectPhotoButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
-            ]
-        } else {
-            selectPhotoButtonConstraints = [
-                selectPhotoButton.widthAnchor.constraint(equalToConstant: 44.0),
-                selectPhotoButton.heightAnchor.constraint(equalToConstant: 44.0),
-                selectPhotoButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24.0),
-                view.bottomAnchor.constraint(equalTo: selectPhotoButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
-            ]
-        }
+        let selectPhotoButtonConstraints = [
+            selectPhotoButton.widthAnchor.constraint(equalToConstant: 44.0),
+            selectPhotoButton.heightAnchor.constraint(equalToConstant: 44.0),
+            selectPhotoButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -24.0),
+            view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: selectPhotoButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
+        ]
         NSLayoutConstraint.activate(selectPhotoButtonConstraints)
     }
     
