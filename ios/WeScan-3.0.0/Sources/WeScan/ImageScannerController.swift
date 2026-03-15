@@ -78,8 +78,11 @@ public final class ImageScannerController: UINavigationController {
         if let image {
             detect(image: image) { [weak self] detectedQuad in
                 guard let self else { return }
-                let editViewController = EditScanViewController(image: image, quad: detectedQuad, rotateImage: false)
-                self.setViewControllers([editViewController], animated: false)
+                let listImageController = ListImagePickedController(images: [image,image,image,image,image,image,image,image,image,image,image,image])
+                self.setViewControllers([listImageController], animated: false)
+                // let editViewController = EditScanViewController(image: image, quad: detectedQuad, rotateImage: false)
+                // self.setViewControllers([editViewController], animated: false)
+                print("Detect iamge: \(detectedQuad)")
             }
         }
     }

@@ -1,14 +1,42 @@
 {
+  "originHash" : "8c01354f06a6c79d5ce87b01d1e869a44d42c36c86f2eec02c98eaa746dcdfad",
   "pins" : [
     {
-      "identity" : "swift-snapshot-testing",
+      "identity" : "prynttrimmerview",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
+      "location" : "https://github.com/HHK1/PryntTrimmerView",
       "state" : {
-        "revision" : "f29e2014f6230cf7d5138fc899da51c7f513d467",
-        "version" : "1.10.0"
+        "revision" : "ac1b60a22c7e6a6514de7a66d2f3d5b537c956d5",
+        "version" : "4.0.2"
+      }
+    },
+    {
+      "identity" : "stevia",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/freshOS/Stevia",
+      "state" : {
+        "revision" : "6192b6216f821b7132e9b772108f25af8cf8ebc5",
+        "version" : "6.2.2"
+      }
+    },
+    {
+      "identity" : "tlphotopicker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tilltue/TLPhotoPicker.git",
+      "state" : {
+        "revision" : "bf4a14650ba3adf0890644b91dfb9601da6ba38c",
+        "version" : "2.1.18"
+      }
+    },
+    {
+      "identity" : "ypimagepicker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Yummypets/YPImagePicker.git",
+      "state" : {
+        "revision" : "a1dbf277792dbfa6e15719e57bb552c9f471b94a",
+        "version" : "5.3.2"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

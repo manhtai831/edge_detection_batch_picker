@@ -8,9 +8,12 @@
 
 import UIKit
 import WeScan
+import TLPhotoPicker
+import Photos
 
 final class HomeViewController: UIViewController {
 
+    var selectedAssets = [TLPHAsset]()
     private lazy var logoImageView: UIImageView = {
         let image = #imageLiteral(resourceName: "WeScanLogo")
         let imageView = UIImageView(image: image)
@@ -123,10 +126,15 @@ final class HomeViewController: UIViewController {
             self.selectImage()
         }
 
+        let selectMultipleAction = UIAlertAction(title: "Select Multiple", style: .default) { _ in
+            self.selectMultipleImage()
+        }
+
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
 
         actionSheet.addAction(scanAction)
         actionSheet.addAction(selectAction)
+        actionSheet.addAction(selectMultipleAction)
         actionSheet.addAction(cancelAction)
         actionSheet.addAction(newAction)
 
@@ -152,6 +160,88 @@ final class HomeViewController: UIViewController {
         imagePicker.sourceType = .photoLibrary
         present(imagePicker, animated: true)
     }
+    
+    func selectMultipleImage(){
+        let picker = createPicker(
+            TLPhotosPickerViewController(),
+            withLogDelegate: true
+        ) { picker in
+            picker.configure = TLPhotosPickerConfigure()
+                .numberOfColumns(3)
+                .maxSelection(15)
+        }
+
+        present(picker, animated: true)
+    }
+    
+    private func createPicker<T: TLPhotosPickerViewController>(
+        _ picker: T,
+        withLogDelegate: Bool = false,
+        configuration: (T) -> Void
+    ) -> T {
+        picker.modalPresentationStyle = .fullScreen
+        picker.delegate = self
+        setupCommonHandlers(for: picker)
+
+        configuration(picker)
+
+        picker.selectedAssets = self.selectedAssets
+
+        if withLogDelegate {
+            picker.logDelegate = self
+        }
+
+        return picker
+    }
+    
+    private func setupCommonHandlers(for picker: TLPhotosPickerViewController) {
+        picker.didExceedMaximumNumberOfSelection = { [weak self] picker in
+//            self?.showExceededMaximumAlert(vc: picker)
+            print("didExceedMaximumNumberOfSelection")
+        }
+
+        picker.handleNoAlbumPermissions = { [weak self] picker in
+            self?.handleNoAlbumPermissions(picker: picker)
+        }
+
+        picker.handleNoCameraPermissions = { [weak self] picker in
+            self?.handleNoCameraPermissions(picker: picker)
+        }
+    }
+    
+    
+    func handleNoAlbumPermissions(picker: TLPhotosPickerViewController) {
+        picker.dismiss(animated: true) {
+            self.showPermissionAlert(
+                for: "Photo Library",
+                message: "Please grant photo library access in Settings to select photos.",
+                on: self
+            )
+        }
+    }
+
+    func handleNoCameraPermissions(picker: TLPhotosPickerViewController) {
+        showPermissionAlert(
+            for: "Camera",
+            message: "Please grant camera access in Settings to take photos.",
+            on: picker
+        )
+    }
+    private func showPermissionAlert(for feature: String, message: String, on viewController: UIViewController) {
+        let alert = UIAlertController(
+            title: "\(feature) Access Required",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        viewController.present(alert, animated: true)
+    }
+
 
 }
 
@@ -182,5 +272,36 @@ extension HomeViewController: UIImagePickerControllerDelegate, UINavigationContr
         guard let image = info[.originalImage] as? UIImage else { return }
         let scannerViewController = ImageScannerController(image: image, delegate: self)
         present(scannerViewController, animated: true)
+    }
+}
+
+extension HomeViewController: TLPhotosPickerViewControllerDelegate {
+    func dismissPhotoPicker(withTLPHAssets: [TLPHAsset]) {
+        let images = withTLPHAssets.map { value in
+            value.fullResolutionImage
+        }
+        
+    }
+}
+
+
+extension HomeViewController: TLPhotosPickerLogDelegate {
+
+    func selectedCameraCell(picker: TLPhotosPickerViewController) {
+        print("📷 Camera cell tapped")
+    }
+
+    func selectedPhoto(picker: TLPhotosPickerViewController, at index: Int) {
+        print("✅ Photo selected at index: \(index)")
+        print("   Total selected: \(picker.selectedAssets.count)")
+    }
+
+    func deselectedPhoto(picker: TLPhotosPickerViewController, at index: Int) {
+        print("❌ Photo deselected at index: \(index)")
+        print("   Total selected: \(picker.selectedAssets.count)")
+    }
+
+    func selectedAlbum(picker: TLPhotosPickerViewController, title: String, at index: Int) {
+        print("📁 Album selected: '\(title)' at index: \(index)")
     }
 }

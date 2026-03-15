@@ -9,9 +9,13 @@
 import AVFoundation
 import UIKit
 
+public protocol EditScanViewControllerDelegate: AnyObject {
+    func onEditResult(result: ImageScannerResults)
+}
+
 /// The `EditScanViewController` offers an interface for the user to edit the detected quadrilateral.
 final class EditScanViewController: UIViewController {
-
+    weak var delegate: EditScanViewControllerDelegate?
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.clipsToBounds = true
@@ -80,26 +84,64 @@ final class EditScanViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
 
-        setupViews()
-        setupConstraints()
-        title = NSLocalizedString("wescan.edit.title",
-                                  tableName: nil,
-                                  bundle: Bundle(for: EditScanViewController.self),
-                                  value: "Edit Scan",
-                                  comment: "The title of the EditScanViewController"
-        )
-        navigationItem.rightBarButtonItem = nextButton
-        if let firstVC = self.navigationController?.viewControllers.first, firstVC == self {
-            navigationItem.leftBarButtonItem = cancelButton
+            setupViews()
+            setupConstraints()
+            // Set page background to black
+            view.backgroundColor = .black
+
+            zoomGestureController = ZoomGestureController(image: image, quadView: quadView)
+
+            let touchDown = UILongPressGestureRecognizer(target: zoomGestureController, action: #selector(zoomGestureController.handle(pan:)))
+            touchDown.minimumPressDuration = 0
+            touchDown.cancelsTouchesInView = false
+            view.addGestureRecognizer(touchDown)
+        // Remove navigation bar, add custom top buttons
+        addTopButtons()
+        // Add two custom buttons at the top
+    }
+
+    // Add two custom buttons at the top, 16pt from left/right, close to top
+    private func addTopButtons() {
+        let buttonHeight: CGFloat = 44
+        let buttonWidth: CGFloat = 80
+        let leftPadding: CGFloat = 16
+        let rightPadding: CGFloat = 16
+
+        // Use safeAreaInsets for top spacing
+        let topPadding: CGFloat
+        if #available(iOS 11.0, *) {
+            topPadding = view.safeAreaInsets.top
         } else {
-            navigationItem.leftBarButtonItem = nil
+            topPadding = 20 // fallback for older iOS
         }
 
-        zoomGestureController = ZoomGestureController(image: image, quadView: quadView)
+        let leftButton = UIButton(type: .system)
+        leftButton.setTitle("Quay lại", for: .normal)
+        leftButton.setTitleColor(.white, for: .normal)
+        leftButton.backgroundColor = .clear
+        leftButton.translatesAutoresizingMaskIntoConstraints = false
+        leftButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
+        view.addSubview(leftButton)
 
-        let touchDown = UILongPressGestureRecognizer(target: zoomGestureController, action: #selector(zoomGestureController.handle(pan:)))
-        touchDown.minimumPressDuration = 0
-        view.addGestureRecognizer(touchDown)
+        let rightButton = UIButton(type: .system)
+        rightButton.setTitle("Tiếp theo", for: .normal)
+        rightButton.setTitleColor(.white, for: .normal)
+        rightButton.backgroundColor = .clear
+        rightButton.translatesAutoresizingMaskIntoConstraints = false
+        rightButton.addTarget(self, action: #selector(pushReviewController), for: .touchUpInside)
+        view.addSubview(rightButton)
+
+        NSLayoutConstraint.activate([
+            leftButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: leftPadding),
+            leftButton.topAnchor.constraint(equalTo: view.topAnchor, constant: topPadding),
+            leftButton.widthAnchor.constraint(equalToConstant: buttonWidth),
+            leftButton.heightAnchor.constraint(equalToConstant: buttonHeight),
+
+            rightButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -rightPadding),
+            rightButton.topAnchor.constraint(equalTo: view.topAnchor, constant: topPadding),
+            rightButton.widthAnchor.constraint(equalToConstant: buttonWidth),
+            rightButton.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
     }
 
     override public func viewDidLayoutSubviews() {
@@ -146,18 +188,13 @@ final class EditScanViewController: UIViewController {
 
     // MARK: - Actions
     @objc func cancelButtonTapped() {
-        if let imageScannerController = navigationController as? ImageScannerController {
-            imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController)
-        }
+        self.dismiss(animated: true)
     }
 
     @objc func pushReviewController() {
         guard let quad = quadView.quad,
             let ciImage = CIImage(image: image) else {
-                if let imageScannerController = navigationController as? ImageScannerController {
-                    let error = ImageScannerControllerError.ciImageCreation
-                    imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFailWithError: error)
-                }
+                dismiss(animated: true)
                 return
         }
         let cgOrientation = CGImagePropertyOrientation(image.imageOrientation)
@@ -187,9 +224,10 @@ final class EditScanViewController: UIViewController {
             croppedScan: ImageScannerScan(image: croppedImage),
             enhancedScan: enhancedScan
         )
-
-        let reviewViewController = ReviewViewController(results: results)
-        navigationController?.pushViewController(reviewViewController, animated: true)
+        self.delegate?.onEditResult(result: results)
+//        let reviewViewController = ReviewViewController(results: results)
+//        navigationController?.pushViewController(reviewViewController, animated: true)
+        dismiss(animated: true)
     }
 
     private func displayQuad() {

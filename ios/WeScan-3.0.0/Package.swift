@@ -19,17 +19,17 @@ let package = Package(
                 resources: [
                     .process("Resources")
                 ]),
-        .testTarget(
-            name: "WeScanTests",
-            dependencies: [
-                "WeScan",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ],
-            exclude:["Info.plist"],
-            resources: [
-                .process("Resources"),
-                .copy("__Snapshots__")
-            ]
-        )
+       .testTarget(
+           name: "WeScanTests",
+           dependencies: [
+               "WeScan",
+               .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+           ],
+           exclude:["Info.plist"],
+           resources: [
+               .process("Resources"),
+               .copy("__Snapshots__")
+           ]
+       )
     ]
 )

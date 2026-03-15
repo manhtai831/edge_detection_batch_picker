@@ -3,14 +3,16 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		383C440E23C5846B0070DE47 /* EditImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 383C440D23C5846B0070DE47 /* EditImageViewController.swift */; };
 		383C441723C587B90070DE47 /* ReviewImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 383C441623C587B90070DE47 /* ReviewImageViewController.swift */; };
 		388A3BF423C46DAE00263DD1 /* NewCameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388A3BF323C46DAE00263DD1 /* NewCameraViewController.swift */; };
-		8432556F293A41A100E3CC20 /* WeScan in Frameworks */ = {isa = PBXBuildFile; productRef = 8432556E293A41A100E3CC20 /* WeScan */; };
+		721E07412F65A4160010FC60 /* WeScan in Frameworks */ = {isa = PBXBuildFile; productRef = 721E07402F65A4160010FC60 /* WeScan */; };
+		721E07442F65B56F0010FC60 /* YPImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 721E07432F65B56F0010FC60 /* YPImagePicker */; };
+		721E07472F65B9650010FC60 /* TLPhotoPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 721E07462F65B9650010FC60 /* TLPhotoPicker */; };
 		A1D4BCBB202C4F3800FCDDEC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D4BCBA202C4F3800FCDDEC /* AppDelegate.swift */; };
 		A1D4BCBD202C4F3800FCDDEC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D4BCBC202C4F3800FCDDEC /* HomeViewController.swift */; };
 		A1D4BCC0202C4F3800FCDDEC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1D4BCBE202C4F3800FCDDEC /* Main.storyboard */; };
@@ -35,7 +37,6 @@
 		383C440D23C5846B0070DE47 /* EditImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageViewController.swift; sourceTree = "<group>"; };
 		383C441623C587B90070DE47 /* ReviewImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewImageViewController.swift; sourceTree = "<group>"; };
 		388A3BF323C46DAE00263DD1 /* NewCameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewCameraViewController.swift; sourceTree = "<group>"; };
-		8432556D293A419500E3CC20 /* WeScan */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = WeScan; path = ..; sourceTree = "<group>"; };
 		A1D4BCB7202C4F3800FCDDEC /* WeScanSampleProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeScanSampleProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1D4BCBA202C4F3800FCDDEC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A1D4BCBC202C4F3800FCDDEC /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
@@ -50,7 +51,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8432556F293A41A100E3CC20 /* WeScan in Frameworks */,
+				721E07412F65A4160010FC60 /* WeScan in Frameworks */,
+				721E07472F65B9650010FC60 /* TLPhotoPicker in Frameworks */,
+				721E07442F65B56F0010FC60 /* YPImagePicker in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,7 +70,6 @@
 		A1D4BCAE202C4F3800FCDDEC = {
 			isa = PBXGroup;
 			children = (
-				8432556D293A419500E3CC20 /* WeScan */,
 				A1D4BCB9202C4F3800FCDDEC /* WeScanSampleProject */,
 				A1D4BCB8202C4F3800FCDDEC /* Products */,
 				74E27857215446C900361812 /* Frameworks */,
@@ -108,7 +110,6 @@
 				A1D4BCB3202C4F3800FCDDEC /* Sources */,
 				A1D4BCB4202C4F3800FCDDEC /* Frameworks */,
 				A1D4BCB5202C4F3800FCDDEC /* Resources */,
-				503A25E422FB044C00534850 /* SwiftLint */,
 				A1D4BD07202C4F4100FCDDEC /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -117,7 +118,9 @@
 			);
 			name = WeScanSampleProject;
 			packageProductDependencies = (
-				8432556E293A41A100E3CC20 /* WeScan */,
+				721E07402F65A4160010FC60 /* WeScan */,
+				721E07432F65B56F0010FC60 /* YPImagePicker */,
+				721E07462F65B9650010FC60 /* TLPhotoPicker */,
 			);
 			productName = ScannerSampleProject;
 			productReference = A1D4BCB7202C4F3800FCDDEC /* WeScanSampleProject.app */;
@@ -136,7 +139,6 @@
 					A1D4BCB6202C4F3800FCDDEC = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -168,6 +170,11 @@
 				ko,
 			);
 			mainGroup = A1D4BCAE202C4F3800FCDDEC;
+			packageReferences = (
+				721E073F2F65A4160010FC60 /* XCLocalSwiftPackageReference "../../WeScan-3.0.0" */,
+				721E07422F65B56F0010FC60 /* XCRemoteSwiftPackageReference "YPImagePicker" */,
+				721E07452F65B9650010FC60 /* XCRemoteSwiftPackageReference "TLPhotoPicker" */,
+			);
 			productRefGroup = A1D4BCB8202C4F3800FCDDEC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -189,27 +196,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		503A25E422FB044C00534850 /* SwiftLint */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftLint;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -z \"$CI\" ]; then\n    if [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n        if test -d \"/opt/homebrew/bin/\"; then\n            PATH=\"/opt/homebrew/bin/:${PATH}\"\n        fi\n\n        export PATH\n        swiftlint --config \"${SRCROOT}/../Submodules/WeTransfer-iOS-CI/BuildTools/.swiftlint.yml\"\n    else\n        echo \"Info: As we're not building for Debug, no SwiftLint is running.\"\n    fi\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A1D4BCB3202C4F3800FCDDEC /* Sources */ = {
@@ -367,15 +353,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = HB6742C2HH;
 				INFOPLIST_FILE = WeScanSampleProject/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.WeTransfer.WeScanSampleProject;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.WeTransfer.WeScanSampleProject100;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -396,6 +383,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.WeTransfer.WeScanSampleProject;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -427,10 +415,46 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		721E073F2F65A4160010FC60 /* XCLocalSwiftPackageReference "../../WeScan-3.0.0" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../WeScan-3.0.0";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		721E07422F65B56F0010FC60 /* XCRemoteSwiftPackageReference "YPImagePicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Yummypets/YPImagePicker.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.3.2;
+			};
+		};
+		721E07452F65B9650010FC60 /* XCRemoteSwiftPackageReference "TLPhotoPicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tilltue/TLPhotoPicker.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.18;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-		8432556E293A41A100E3CC20 /* WeScan */ = {
+		721E07402F65A4160010FC60 /* WeScan */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WeScan;
+		};
+		721E07432F65B56F0010FC60 /* YPImagePicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 721E07422F65B56F0010FC60 /* XCRemoteSwiftPackageReference "YPImagePicker" */;
+			productName = YPImagePicker;
+		};
+		721E07462F65B9650010FC60 /* TLPhotoPicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 721E07452F65B9650010FC60 /* XCRemoteSwiftPackageReference "TLPhotoPicker" */;
+			productName = TLPhotoPicker;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
