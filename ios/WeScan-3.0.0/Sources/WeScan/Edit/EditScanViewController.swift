@@ -75,10 +75,15 @@ final class EditScanViewController: UIViewController {
         self.image = rotateImage ? image.applyingPortraitOrientation() : image
         self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
         super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
     }
 
     override public func viewDidLoad() {
@@ -133,12 +138,12 @@ final class EditScanViewController: UIViewController {
 
         NSLayoutConstraint.activate([
             leftButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: leftPadding),
-            leftButton.topAnchor.constraint(equalTo: view.topAnchor, constant: topPadding),
+            leftButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topPadding),
             leftButton.widthAnchor.constraint(equalToConstant: buttonWidth),
             leftButton.heightAnchor.constraint(equalToConstant: buttonHeight),
 
             rightButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -rightPadding),
-            rightButton.topAnchor.constraint(equalTo: view.topAnchor, constant: topPadding),
+            rightButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topPadding),
             rightButton.widthAnchor.constraint(equalToConstant: buttonWidth),
             rightButton.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
@@ -197,10 +202,51 @@ final class EditScanViewController: UIViewController {
                 dismiss(animated: true)
                 return
         }
+        // let cgOrientation = CGImagePropertyOrientation(image.imageOrientation)
+        // let orientedImage = ciImage.oriented(forExifOrientation: Int32(cgOrientation.rawValue))
+        let scaledQuad = quad.scale(quadView.bounds.size, image.size)
+        // self.quad = scaledQuad
+        guard let results = EditScanViewController.getImageScannerResults(image: image, quad: scaledQuad) else{
+            dismiss(animated: true)
+            return
+        }
+    
+        // // Cropped Image
+        // var cartesianScaledQuad = scaledQuad.toCartesian(withHeight: image.size.height)
+        // cartesianScaledQuad.reorganize()
+
+        // let filteredImage = orientedImage.applyingFilter("CIPerspectiveCorrection", parameters: [
+        //     "inputTopLeft": CIVector(cgPoint: cartesianScaledQuad.bottomLeft),
+        //     "inputTopRight": CIVector(cgPoint: cartesianScaledQuad.bottomRight),
+        //     "inputBottomLeft": CIVector(cgPoint: cartesianScaledQuad.topLeft),
+        //     "inputBottomRight": CIVector(cgPoint: cartesianScaledQuad.topRight)
+        // ])
+
+        // let croppedImage = UIImage.from(ciImage: filteredImage)
+        // // Enhanced Image
+        // let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+        // let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
+
+        // let results = ImageScannerResults(
+        //     detectedRectangle: scaledQuad,
+        //     originalScan: ImageScannerScan(image: image),
+        //     croppedScan: ImageScannerScan(image: croppedImage),
+        //     enhancedScan: enhancedScan
+        // )
+        self.delegate?.onEditResult(result: results)
+//        let reviewViewController = ReviewViewController(results: results)
+//        navigationController?.pushViewController(reviewViewController, animated: true)
+        dismiss(animated: true)
+    }
+    
+    public static func getImageScannerResults(image: UIImage,quad: Quadrilateral)->ImageScannerResults? {
+        guard let ciImage = CIImage(image: image) else {
+            return nil
+        }
+        
         let cgOrientation = CGImagePropertyOrientation(image.imageOrientation)
         let orientedImage = ciImage.oriented(forExifOrientation: Int32(cgOrientation.rawValue))
-        let scaledQuad = quad.scale(quadView.bounds.size, image.size)
-        self.quad = scaledQuad
+        let scaledQuad = quad
 
         // Cropped Image
         var cartesianScaledQuad = scaledQuad.toCartesian(withHeight: image.size.height)
@@ -224,10 +270,7 @@ final class EditScanViewController: UIViewController {
             croppedScan: ImageScannerScan(image: croppedImage),
             enhancedScan: enhancedScan
         )
-        self.delegate?.onEditResult(result: results)
-//        let reviewViewController = ReviewViewController(results: results)
-//        navigationController?.pushViewController(reviewViewController, animated: true)
-        dismiss(animated: true)
+        return results
     }
 
     private func displayQuad() {
@@ -254,7 +297,7 @@ final class EditScanViewController: UIViewController {
     }
 
     /// Generates a `Quadrilateral` object that's centered and 90% of the size of the passed in image.
-    private static func defaultQuad(forImage image: UIImage) -> Quadrilateral {
+    public static func defaultQuad(forImage image: UIImage) -> Quadrilateral {
         let topLeft = CGPoint(x: image.size.width * 0.05, y: image.size.height * 0.05)
         let topRight = CGPoint(x: image.size.width * 0.95, y: image.size.height * 0.05)
         let bottomRight = CGPoint(x: image.size.width * 0.95, y: image.size.height * 0.95)

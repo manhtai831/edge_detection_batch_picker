@@ -14,6 +14,12 @@ import Photos
 final class HomeViewController: UIViewController {
 
     var selectedAssets = [TLPHAsset]()
+    var imagesPicked: [UIImage] = []
+    
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
     private lazy var logoImageView: UIImageView = {
         let image = #imageLiteral(resourceName: "WeScanLogo")
         let imageView = UIImageView(image: image)
@@ -142,16 +148,16 @@ final class HomeViewController: UIViewController {
     }
 
     func scanImage() {
-        let scannerViewController = ImageScannerController(delegate: self)
-        scannerViewController.modalPresentationStyle = .fullScreen
+        // let scannerViewController = ImageScannerController(,delegate: self)
+        // scannerViewController.modalPresentationStyle = .fullScreen
 
-        if #available(iOS 13.0, *) {
-            scannerViewController.navigationBar.tintColor = .label
-        } else {
-            scannerViewController.navigationBar.tintColor = .black
-        }
+        // if #available(iOS 13.0, *) {
+        //     scannerViewController.navigationBar.tintColor = .label
+        // } else {
+        //     scannerViewController.navigationBar.tintColor = .black
+        // }
 
-        present(scannerViewController, animated: true)
+        // present(scannerViewController, animated: true)
     }
 
     func selectImage() {
@@ -169,6 +175,7 @@ final class HomeViewController: UIViewController {
             picker.configure = TLPhotosPickerConfigure()
                 .numberOfColumns(3)
                 .maxSelection(15)
+                .mediaType(.image)
         }
 
         present(picker, animated: true)
@@ -250,7 +257,7 @@ extension HomeViewController: ImageScannerControllerDelegate {
         assertionFailure("Error occurred: \(error)")
     }
 
-    func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults) {
+    func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: [ImageScannerResults]) {
         scanner.dismiss(animated: true, completion: nil)
     }
 
@@ -276,11 +283,16 @@ extension HomeViewController: UIImagePickerControllerDelegate, UINavigationContr
 }
 
 extension HomeViewController: TLPhotosPickerViewControllerDelegate {
+
     func dismissPhotoPicker(withTLPHAssets: [TLPHAsset]) {
-        let images = withTLPHAssets.map { value in
-            value.fullResolutionImage
-        }
+        let images = withTLPHAssets.compactMap { $0.fullResolutionImage }
         
+        imagesPicked = images
+    }
+
+    func dismissComplete() {
+        let scannerViewController = ImageScannerController(images: imagesPicked, delegate: self)
+        self.present(scannerViewController, animated: true)
     }
 }
 

@@ -18,7 +18,10 @@ public protocol ImageScannerControllerDelegate: NSObjectProtocol {
     ///   - scanner: The scanner controller object managing the scanning interface.
     ///   - results: The results of the user scanning with the camera.
     /// - Discussion: Your delegate's implementation of this method should dismiss the image scanner controller.
-    func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults)
+    func imageScannerController(
+        _ scanner: ImageScannerController,
+        didFinishScanningWithResults results: [ImageScannerResults]
+    )
 
     /// Tells the delegate that the user cancelled the scan operation.
     ///
@@ -45,6 +48,10 @@ public final class ImageScannerController: UINavigationController {
     /// The object that acts as the delegate of the `ImageScannerController`.
     public weak var imageScannerDelegate: ImageScannerControllerDelegate?
 
+    private var images: [UIImage] = []
+    private var loadingView: UIActivityIndicatorView?
+    private var isViewAppeared = false
+
     // MARK: - Life Cycle
 
     /// A black UIView, used to quickly display a black screen when the shutter button is presseed.
@@ -60,7 +67,7 @@ public final class ImageScannerController: UINavigationController {
         return .portrait
     }
 
-    public required init(image: UIImage? = nil, delegate: ImageScannerControllerDelegate? = nil) {
+    public init(image: UIImage? = nil, delegate: ImageScannerControllerDelegate? = nil) {
         super.init(rootViewController: ScannerViewController())
 
         self.imageScannerDelegate = delegate
@@ -78,13 +85,75 @@ public final class ImageScannerController: UINavigationController {
         if let image {
             detect(image: image) { [weak self] detectedQuad in
                 guard let self else { return }
-                let listImageController = ListImagePickedController(images: [image,image,image,image,image,image,image,image,image,image,image,image])
+                let defaultQuad =
+                    detectedQuad ?? EditScanViewController.defaultQuad(forImage: image)
+                let listImageController = ListImagePickedController(imageResults: [
+                    ImageScannerResults(
+                        detectedRectangle: defaultQuad,
+                        originalScan: ImageScannerScan(image: image),
+                        croppedScan: ImageScannerScan(image: image),
+                        enhancedScan: ImageScannerScan(image: image))
+                ])
                 self.setViewControllers([listImageController], animated: false)
-                // let editViewController = EditScanViewController(image: image, quad: detectedQuad, rotateImage: false)
-                // self.setViewControllers([editViewController], animated: false)
-                print("Detect iamge: \(detectedQuad)")
             }
         }
+    }
+
+    public init(images: [UIImage]? = nil, delegate: ImageScannerControllerDelegate? = nil) {
+        super.init(rootViewController: UIViewController())
+        modalPresentationStyle = .fullScreen
+        view.backgroundColor = .white
+        self.images = images ?? []
+    }
+
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if isViewAppeared { return }
+        isViewAppeared = true
+        showLoading()
+        var results: [ImageScannerResults] = []
+        let group = DispatchGroup()
+        for image in self.images {
+            group.enter()
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.detect(image: image) { detectedQuad in
+                    let defaultQuad =
+                        detectedQuad ?? EditScanViewController.defaultQuad(forImage: image)
+                    let result = EditScanViewController.getImageScannerResults(
+                        image: image, quad: defaultQuad)
+                    if let result = result {
+                        DispatchQueue.main.async {
+                            results.append(result)
+                        }
+                    }
+                    group.leave()
+                }
+            }
+        }
+        group.notify(queue: .main) {
+            self.hideLoading()
+            let listImageController = ListImagePickedController(imageResults: results)
+            listImageController.delegate = self
+            self.setViewControllers([listImageController], animated: false)
+        }
+    }
+    private func showLoading() {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.center = view.center
+        indicator.startAnimating()
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(indicator)
+        NSLayoutConstraint.activate([
+            indicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            indicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        loadingView = indicator
+    }
+
+    private func hideLoading() {
+        loadingView?.stopAnimating()
+        loadingView?.removeFromSuperview()
+        loadingView = nil
     }
 
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
@@ -112,7 +181,8 @@ public final class ImageScannerController: UINavigationController {
             }
         } else {
             // Use the CIRectangleDetector on iOS 10 to attempt to find a rectangle from the initial image.
-            let detectedQuad = CIRectangleDetector.rectangle(forImage: ciImage)?.toCartesian(withHeight: orientedImage.extent.height)
+            let detectedQuad = CIRectangleDetector.rectangle(forImage: ciImage)?.toCartesian(
+                withHeight: orientedImage.extent.height)
             completion(detectedQuad)
         }
     }
@@ -122,7 +192,8 @@ public final class ImageScannerController: UINavigationController {
 
         detect(image: image) { [weak self] detectedQuad in
             guard let self else { return }
-            let editViewController = EditScanViewController(image: image, quad: detectedQuad, rotateImage: false)
+            let editViewController = EditScanViewController(
+                image: image, quad: detectedQuad, rotateImage: false)
             self.setViewControllers([editViewController], animated: true)
         }
     }
@@ -136,7 +207,7 @@ public final class ImageScannerController: UINavigationController {
             blackFlashView.topAnchor.constraint(equalTo: view.topAnchor),
             blackFlashView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             view.bottomAnchor.constraint(equalTo: blackFlashView.bottomAnchor),
-            view.trailingAnchor.constraint(equalTo: blackFlashView.trailingAnchor)
+            view.trailingAnchor.constraint(equalTo: blackFlashView.trailingAnchor),
         ]
 
         NSLayoutConstraint.activate(blackFlashViewConstraints)
@@ -149,6 +220,17 @@ public final class ImageScannerController: UINavigationController {
         DispatchQueue.main.asyncAfter(deadline: flashDuration) {
             self.blackFlashView.isHidden = true
         }
+    }
+}
+
+extension ImageScannerController: ListImageScannerControllerDelegate {
+    public func onFinishPicking(results: [ImageScannerResults]) {
+        self.imageScannerDelegate?.imageScannerController(
+            self, didFinishScanningWithResults: results)
+    }
+
+    public func onCancel() {
+        self.imageScannerDelegate?.imageScannerControllerDidCancel(self)
     }
 }
 
