@@ -101,6 +101,7 @@ public final class ImageScannerController: UINavigationController {
 
     public init(images: [UIImage]? = nil, delegate: ImageScannerControllerDelegate? = nil) {
         super.init(rootViewController: UIViewController())
+        self.imageScannerDelegate = delegate
         modalPresentationStyle = .fullScreen
         view.backgroundColor = .white
         self.images = images ?? []

@@ -8,10 +8,10 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
     var cameraController: ImageScannerController!
     var _result: FlutterResult?
 
-    var saveTo: String = ""
-    var canUseGallery: Bool = true
+    var params: PluginParams?
     var selectedAssets = [TLPHAsset]()
     var imagesPicked: [UIImage] = []
+    var isViewDidAppearCalled = false
 
     private func keyWindow() -> UIWindow? {
         return UIApplication.shared.connectedScenes
@@ -22,37 +22,14 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        //        if self.isBeingPresented {
-        //            cameraController = ImageScannerController()
-        //            cameraController.imageScannerDelegate = self
-        //            cameraController.isModalInPresentation = true
-        //            cameraController.overrideUserInterfaceStyle = .dark
-        //            cameraController.view.backgroundColor = .black
-        //
-        //            // Temp fix for https://github.com/WeTransfer/WeScan/issues/320
-        //            let appearance = UINavigationBarAppearance()
-        //            appearance.configureWithOpaqueBackground()
-        //            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
-        //            appearance.backgroundColor = .systemBackground
-        //            UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        //
-        //            let appearanceTB = UITabBarAppearance()
-        //            appearanceTB.configureWithOpaqueBackground()
-        //            appearanceTB.backgroundColor = .systemBackground
-        //            UITabBar.appearance().standardAppearance = appearanceTB
-        //            UITabBar.appearance().scrollEdgeAppearance = appearanceTB
-        //
-        //            present(cameraController, animated: true) {
-        //                if let window = self.keyWindow() {
-        //                    window.addSubview(self.selectPhotoButton)
-        //                    self.setupConstraints()
-        //                }
-        //            }
-        //        }
+        if !isViewDidAppearCalled {
+            isViewDidAppearCalled = true
+            selectMultipleImage()
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
-        if canUseGallery == true {
+        if params?.fromGallery == true {
             selectPhotoButton.isHidden = false
         }
     }
@@ -79,17 +56,6 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
     }
 
     @objc func selectPhoto() {
-        //        if let window = keyWindow() {
-        //            window.rootViewController?.dismiss(animated: true, completion: nil)
-        //            self.hideButtons()
-        //
-        //            let scanPhotoVC =  PhotoPickerViewController()
-        //            scanPhotoVC._result = _result
-        //            scanPhotoVC.saveTo = self.saveTo
-        //            scanPhotoVC.isModalInPresentation = true
-        //            scanPhotoVC.overrideUserInterfaceStyle = .dark
-        //            window.rootViewController?.present(scanPhotoVC, animated: true)
-        //        }
         selectMultipleImage()
     }
 
@@ -109,14 +75,13 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         NSLayoutConstraint.activate(selectPhotoButtonConstraints)
     }
 
-    func setParams(saveTo: String, canUseGallery: Bool) {
-        self.saveTo = saveTo
-        self.canUseGallery = canUseGallery
+    func setParams(params: PluginParams) {
+        self.params = params
     }
 
     func imageScannerController(_ scanner: ImageScannerController, didFailWithError error: Error) {
         print(error)
-        _result!(false)
+        _result!(nil)
         self.hideButtons()
         self.dismiss(animated: true)
     }
@@ -126,17 +91,19 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         didFinishScanningWithResults results: [ImageScannerResults]
     ) {
         // Your ViewController is responsible for dismissing the ImageScannerController
-
         scanner.dismiss(animated: true)
         self.hideButtons()
 
+        var imagesResult = [String]()
         for item in results {
-            saveImage(
+            let imagePath = saveImage(
                 image: item.doesUserPreferEnhancedScan
                     ? item.enhancedScan!.image : item.croppedScan.image)
+            if let imagePath = imagePath {
+                imagesResult.append(imagePath)
+            }
         }
-
-        _result!(true)
+        _result!(imagesResult)
         self.dismiss(animated: true)
     }
 
@@ -145,20 +112,18 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         scanner.dismiss(animated: true)
         self.hideButtons()
 
-        _result!(false)
+        _result!(nil)
         self.dismiss(animated: true)
     }
 
-    func saveImage(image: UIImage) -> Bool? {
+    func saveImage(image: UIImage) -> String? {
 
         guard let data = image.jpegData(compressionQuality: 1) ?? image.pngData() else {
-            return false
+            return nil
         }
-
-        let path: String =
-            "file://" + self.saveTo.addingPercentEncoding(
-                withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let filePath: URL = URL.init(string: path)!
+        let uuid = UUID().uuidString
+        let tmpPath = FileManager.default.temporaryDirectory
+        let filePath: URL = tmpPath.appendingPathComponent("/scan_\(uuid).jpg")
 
         do {
             let fileManager = FileManager.default
@@ -166,8 +131,6 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
             if fileManager.fileExists(atPath: filePath.path) {
                 // Delete file
                 try fileManager.removeItem(atPath: filePath.path)
-            } else {
-                print("File does not exist")
             }
         } catch let error as NSError {
             print("An error took place: \(error)")
@@ -175,10 +138,10 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
 
         do {
             try data.write(to: filePath)
-            return true
+            return filePath.path
         } catch {
             print(error.localizedDescription)
-            return false
+            return nil
         }
     }
 }
@@ -190,14 +153,18 @@ extension HomeViewController {
             TLPhotosPickerViewController(),
             withLogDelegate: false
         ) { picker in
-            picker.configure = TLPhotosPickerConfigure()
+            var config = TLPhotosPickerConfigure()
                 .numberOfColumns(3)
-                .maxSelection(15)
                 .mediaType(.image)
+
+            if let maxSelection = self.params?.maxImageGallery {
+                config = config.maxSelection(maxSelection)
+            }
+            
+            picker.configure = config
         }
-        if let window = keyWindow() {
-            window.rootViewController?.present(picker, animated: true)
-        }
+
+        self.present(picker, animated: true)
     }
 
     private func createPicker<T: TLPhotosPickerViewController>(
@@ -218,8 +185,7 @@ extension HomeViewController {
 
     private func setupCommonHandlers(for picker: TLPhotosPickerViewController) {
         picker.didExceedMaximumNumberOfSelection = { [weak self] picker in
-            //            self?.showExceededMaximumAlert(vc: picker)
-            print("didExceedMaximumNumberOfSelection")
+            self?.showExceededMaximumAlert(vc: picker)
         }
 
         picker.handleNoAlbumPermissions = { [weak self] picker in
@@ -235,7 +201,7 @@ extension HomeViewController {
         picker.dismiss(animated: true) {
             self.showPermissionAlert(
                 for: "Photo Library",
-                message: "Please grant photo library access in Settings to select photos.",
+                message: "Vui lòng cấp quyền truy cập thư viện ảnh trong phần Cài đặt để chọn ảnh.",
                 on: self
             )
         }
@@ -244,10 +210,21 @@ extension HomeViewController {
     func handleNoCameraPermissions(picker: TLPhotosPickerViewController) {
         showPermissionAlert(
             for: "Camera",
-            message: "Please grant camera access in Settings to take photos.",
+            message: "Vui lòng cấp quyền truy cập camera trong phần Cài đặt để chụp ảnh.",
             on: picker
         )
     }
+    
+    private func showExceededMaximumAlert(vc: UIViewController) {
+        let alert = UIAlertController(
+            title: "Đã đạt giới hạn lựa chọn",
+            message: "Bạn đã đạt đến số lượng lựa chọn tối đa.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        vc.present(alert, animated: true)
+    }
+    
     private func showPermissionAlert(
         for feature: String, message: String, on viewController: UIViewController
     ) {
@@ -262,7 +239,7 @@ extension HomeViewController {
                     UIApplication.shared.open(url)
                 }
             })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Huỷ", style: .cancel))
         viewController.present(alert, animated: true)
     }
 }
@@ -272,16 +249,13 @@ extension HomeViewController: TLPhotosPickerViewControllerDelegate {
     func dismissPhotoPicker(withTLPHAssets: [TLPHAsset]) {
         let images = withTLPHAssets.compactMap { $0.fullResolutionImage }
         imagesPicked = images
-        print("dismissPhotoPicker with \(images.count) images")
     }
 
     func dismissComplete() {
-        print("dismissComplete")
-//        if imagesPicked.isEmpty {
-//            return
-//        }
+        if imagesPicked.isEmpty {
+            return
+        }
         let scannerViewController = ImageScannerController(images: imagesPicked, delegate: self)
-         let window = self.keyWindow()
-            window?.rootViewController?.present(scannerViewController, animated: true)
+        self.present(scannerViewController, animated: true)
     }
 }

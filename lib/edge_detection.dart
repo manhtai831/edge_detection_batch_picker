@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:edge_detection/model/plugin_params.dart';
 import 'package:flutter/services.dart';
 
 class EdgeDetection {
@@ -25,18 +26,8 @@ class EdgeDetection {
   }
 
   /// Call this method to scan the object edge from a gallery image.
-  static Future<bool> detectEdgeFromGallery(
-    String saveTo, {
-    String androidCropTitle = "Crop",
-    String androidCropBlackWhiteTitle = "Black White",
-    String androidCropReset = "Reset",
-  }) async {
-    return await _channel.invokeMethod('edge_detect_gallery', {
-      'save_to': saveTo,
-      'crop_title': androidCropTitle,
-      'crop_black_white_title': androidCropBlackWhiteTitle,
-      'crop_reset_title': androidCropReset,
-      'from_gallery': true,
-    });
+  /// It returning list image patch cropped
+  static Future<List<Object?>> detectEdgeFromGallery(PluginParams params) async {
+    return await _channel.invokeMethod('edge_detect_gallery', params.toJson());
   }
 }
