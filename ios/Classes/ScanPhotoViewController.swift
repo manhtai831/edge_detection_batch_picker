@@ -47,7 +47,7 @@ class ScanPhotoViewController: UIViewController, ImageScannerControllerDelegate,
         appearanceTB.configureWithOpaqueBackground()
         appearanceTB.backgroundColor = .systemBackground
         UITabBar.appearance().standardAppearance = appearanceTB
-        UITabBar.appearance().scrollEdgeAppearance = appearanceTB
+//        UITabBar.appearance().scrollEdgeAppearance = appearanceTB
         
         if self.isBeingPresented {
             let imagePicker = UIImagePickerController()
@@ -64,12 +64,12 @@ class ScanPhotoViewController: UIViewController, ImageScannerControllerDelegate,
         self.dismiss(animated: true)
     }
     
-    func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults) {
+    func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: [ImageScannerResults]) {
         // Your ViewController is responsible for dismissing the ImageScannerController
         scanner.dismiss(animated: true)
         
         
-        saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
+//        saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
         _result!(true)
         self.dismiss(animated: true)
     }
