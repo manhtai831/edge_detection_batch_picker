@@ -67,7 +67,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> getImageFromGallery() async {
     try {
       //Make sure to await the call to detectEdgeFromGallery.
-      final images = await EdgeDetection.detectEdgeFromGallery(PluginParams(maxImageGallery: 1));
+      final images = await EdgeDetection.detectEdgeFromGallery(PluginParams());
       if (!mounted) return;
 
       setState(() {
